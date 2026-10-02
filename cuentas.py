@@ -39,3 +39,45 @@ class CuentaAhorros(CuentaBancaria):
     def __str__(self) -> str:
         return (f"{super().__str__()} | Tasa: {self.tasa_interes}% | "
                 f"Interés anual: S/ {self.calcular_interes():.2f}")
+    
+
+class CuentaCorriente(CuentaBancaria):
+    def __init__(self, numero_cuenta: str, titular: str, limite_sobregiro: float):
+        super().__init__(numero_cuenta, titular)
+        self.limite_sobregiro = limite_sobregiro
+
+    def retirar(self, monto: float):
+        if monto <= 0:
+            raise ValueError("El monto a retirar debe ser mayor a 0")
+        if monto > self.consultar_saldo() + self.limite_sobregiro:
+            raise ValueError("El retiro excede el saldo más el límite de sobregiro")
+        self._modificar_saldo(self.consultar_saldo() - monto)
+
+    def permite_sobregiro(self) -> bool:
+        return self.consultar_saldo() < 0
+
+    def __str__(self) -> str:
+        return f"{super().__str__()} | Límite sobregiro: S/ {self.limite_sobregiro:.2f}"
+
+
+ahorros = CuentaAhorros("AH-001", "Eduardo Puma", 4.5)
+ahorros.depositar(1000)
+ahorros.retirar(200)
+print(ahorros)
+print(f"Interés anual calculado: S/ {ahorros.calcular_interes():.2f}")
+
+corriente = CuentaCorriente("CC-001", "Eduardo Puma", 500)
+corriente.depositar(300)
+corriente.retirar(600)
+print(corriente)
+print(f"¿Está en sobregiro?: {corriente.permite_sobregiro()}")
+
+try:
+    corriente.retirar(1000)
+except ValueError as e:
+    print(f"Error: {e}")
+
+try:
+    ahorros.depositar(-50)
+except ValueError as e:
+    print(f"Error: {e}")
